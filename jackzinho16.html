@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tetris Jackzinho</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(rgba(11, 11, 16, 0.82), rgba(11, 11, 16, 0.82)), 
+                        url('https://atletico.com.br/wp-content/uploads/2023/11/PS_94731-scaled.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+            font-size: 2.2rem;
+            letter-spacing: 3px;
+            color: #00f0f0;
+            text-shadow: 0 0 10px rgba(0, 240, 240, 0.8), 0 0 20px rgba(0, 240, 240, 0.4);
+            text-align: center;
+        }
+
+        .game-container {
+            display: flex;
+            background: rgba(21, 21, 32, 0.88);
+            backdrop-filter: blur(8px);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 0 30px rgba(0, 240, 240, 0.25), inset 0 0 15px rgba(255, 255, 255, 0.05);
+            border: 2px solid #2a2a40;
+        }
+
+        canvas {
+            border: 2px solid #00f0f0;
+            background-color: #08080c;
+            box-shadow: 0 0 15px rgba(0, 240, 240, 0.3), inset 0 0 20px rgba(0,0,0,0.9);
+            border-radius: 4px;
+        }
+
+        .side-panel {
+            display: flex;
+            flex-direction: column;
+            margin-left: 20px;
+            justify-content: space-between;
+            width: 170px;
+        }
+
+        .panel-top {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .info-box {
+            background: rgba(26, 26, 43, 0.9);
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #3a3a5e;
+            text-align: center;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .info-box h2 {
+            font-size: 0.75rem;
+            margin: 0 0 5px 0;
+            color: #00f0f0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .info-box span {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 0 5px rgba(255,255,255,0.5);
+        }
+
+        .next-canvas-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #08080c;
+            border: 1px solid #3a3a5e;
+            border-radius: 6px;
+            height: 70px;
+            margin-top: 3px;
+        }
+
+        #next {
+            border: none;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .powerup-container {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            background: rgba(20, 20, 35, 0.9);
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #4a4a7e;
+        }
+
+        .powerup-container h3 {
+            font-size: 0.7rem;
+            margin: 0 0 3px 0;
+            color: #ff0077;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .pw-btn {
+            background: #2a2a4e;
+            color: #fff;
+            border: 1px solid #5a5afe;
+            padding: 5px;
+            font-size: 0.7rem;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+        }
+
+        .pw-btn:hover:not(:disabled) {
+            background: #3a3afe;
+            box-shadow: 0 0 8px rgba(0, 119, 255, 0.8);
+        }
+
+        .pw-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #00f0f0, #0077ff);
+            color: #0b0b10;
+            border: none;
+            padding: 10px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 0 15px rgba(0, 240, 240, 0.4);
+            width: 100%;
+        }
+
+        .btn:hover {
+            background: linear-gradient(135deg, #33f3f3, #3399ff);
+            box-shadow: 0 0 25px rgba(0, 240, 240, 0.8);
+            transform: translateY(-2px);
+        }
+
+        .controls-hint {
+            margin-top: 8px;
+            font-size: 0.65rem;
+            color: #a0a0c0;
+            text-align: center;
+            line-height: 1.3;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>TETRIS JACKZINHO</h1>
+    <div class="game-container">
+        <canvas id="tetris" width="200" height="400"></canvas>
+        <div class="side-panel">
+            <div class="panel-top">
+                <div class="info-box">
+                    <h2>Próxima</h2>
+                    <div class="next-canvas-container">
+                        <canvas id="next" width="70" height="70"></canvas>
+                    </div>
+                </div>
+                <div class="info-box">
+                    <h2>Pontuação</h2>
+                    <span id="score">0</span>
+                </div>
+                <div class="info-box">
+                    <h2>Nível</h2>
+                    <span id="level">1</span>
+                </div>
+                
+                <div class="powerup-container">
+                    <h3>Power-Ups</h3>
+                    <button class="pw-btn" id="pw-bomb" onclick="useBomb()">[B] Bomba (-50 pts)</button>
+                    <button class="pw-btn" id="pw-freeze" onclick="useFreeze()">[N] Congelar (-40 pts)</button>
+                    <button class="pw-btn" id="pw-clear" onclick="useClearHalf()">[M] Limpar (-100 pts)</button>
+                </div>
+            </div>
+            <div>
+                <button class="btn" id="start-btn">Jogar</button>
+                <div class="controls-hint">Setas: Mover/Descer<br>Q/W ou Z/X: Girar</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('tetris');
+        const context = canvas.getContext('2d');
+        const nextCanvas = document.getElementById('next');
+        const nextContext = nextCanvas.getContext('2d');
+
+        const scoreElement = document.getElementById('score');
+        const levelElement = document.getElementById('level');
+        const startBtn = document.getElementById('start-btn');
+
+        context.scale(20, 20);
+        nextContext.scale(20, 20);
+
+        const colors = [
+            null,
+            '#FF0055', // T - Rosa Choque Neon
+            '#00F0F0', // O - Ciano Neon
+            '#00FF66', // L - Verde Neon
+            '#9900FF', // J - Roxo Neon
+            '#FF7700', // S - Laranja Neon
+            '#FFFF00', // Z - Amarelo Neon
+            '#0077FF'  // I - Azul Neon
+        ];
+
+        let isFrozen = false;
+        let freezeTimer = null;
+
+        function arenaSweep() {
+            let rowCount = 1;
+            outer: for (let y = arena.length - 1; y > 0; --y) {
+                for (let x = 0; x < arena[y].length; ++x) {
+                    if (arena[y][x] === 0) {
+                        continue outer;
+                    }
+                }
+                const row = arena.splice(y, 1)[0].fill(0);
+                arena.unshift(row);
+                ++y;
+
+                player.score += rowCount * 10;
+                rowCount *= 2;
+            }
+            scoreElement.innerText = player.score;
+            player.level = Math.floor(player.score / 100) + 1;
+            levelElement.innerText = player.level;
+            
+            if (!isFrozen) {
+                dropInterval = Math.max(100, 1000 - (player.level - 1) * 120);
+            }
+        }
+
+        function collide(arena, player) {
+            const [m, o] = [player.matrix, player.pos];
+            for (let y = 0; y < m.length; ++y) {
+                for (let x = 0; x < m[y].length; ++x) {
+                    if (m[y][x] !== 0 &&
+                       (arena[y + o.y] &&
+                        arena[y + o.y][x + o.x]) !== 0) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        function createMatrix(w, h) {
+            const matrix = [];
+            while (h--) {
+                matrix.push(new Array(w).fill(0));
+            }
+            return matrix;
+        }
+
+        function createPiece(type) {
+            if (type === 'T') {
+                return [[0, 1, 0], [1, 1, 1], [0, 0, 0]];
+            } else if (type === 'O') {
+                return [[2, 2], [2, 2]];
+            } else if (type === 'L') {
+                return [[0, 0, 3], [3, 3, 3], [0, 0, 0]];
+            } else if (type === 'J') {
+                return [[4, 0, 0], [4, 4, 4], [0, 0, 0]];
+            } else if (type === 'S') {
+                return [[0, 5, 5], [5, 5, 0], [0, 0, 0]];
+            } else if (type === 'Z') {
+                return [[6, 6, 0], [0, 6, 6], [0, 0, 0]];
+            } else if (type === 'I') {
+                return [[0, 0, 0, 0], [7, 7, 7, 7], [0, 0, 0, 0], [0, 0, 0, 0]];
+            }
+        }
+
+        function drawBlock(ctx, x, y, value) {
+            ctx.fillStyle = colors[value];
+            ctx.shadowColor = colors[value];
+            ctx.shadowBlur = 8;
+            ctx.fillRect(x, y, 1, 1);
+            
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.fillRect(x + 0.1, y + 0.1, 0.8, 0.1);
+            ctx.shadowBlur = 0;
+        }
+
+        function drawMatrix(matrix, offset, ctx = context) {
+            matrix.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value !== 0) {
+                        drawBlock(ctx, x + offset.x, y + offset.y, value);
+                    }
+                });
+            });
+        }
+
+        function draw() {
+            context.fillStyle = isFrozen ? '#051933' : '#08080c';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+
+            drawMatrix(arena, {x: 0, y: 0});
+            drawMatrix(player.matrix, player.pos);
+        }
+
+        function drawNext() {
+            nextContext.fillStyle = '#08080c';
+            nextContext.fillRect(0, 0, nextCanvas.width, nextCanvas.height);
+
+            if (player.nextMatrix) {
+                const offsetX = (4 - player.nextMatrix[0].length) / 2;
+                const offsetY = (4 - player.nextMatrix.length) / 2;
+                drawMatrix(player.nextMatrix, {x: offsetX, y: offsetY}, nextContext);
+            }
+        }
+
+        function merge(arena, player) {
+            player.matrix.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value !== 0) {
+                        arena[y + player.pos.y][x + player.pos.x] = value;
+                    }
+                });
+            });
+        }
+
+        function playerDrop() {
+            player.pos.y++;
+            if (collide(arena, player)) {
+                player.pos.y--;
+                merge(arena, player);
+                playerReset();
+                arenaSweep();
+            }
+            dropCounter = 0;
+        }
+
+        function playerMove(dir) {
+            player.pos.x += dir;
+            if (collide(arena, player)) {
+                player.pos.x -= dir;
+            }
+        }
+
+        function getRandomPiece() {
+            const pieces = 'TJLOSZI';
+            return createPiece(pieces[(pieces.length * Math.random()) | 0]);
+        }
+
+        function playerReset() {
+            if (!player.nextMatrix) {
+                player.nextMatrix = getRandomPiece();
+            }
+            player.matrix = player.nextMatrix;
+            player.nextMatrix = getRandomPiece();
+            
+            player.pos.y = 0;
+            player.pos.x = (arena[0].length / 2 | 0) - (player.matrix[0].length / 2 | 0);
+            
+            drawNext();
+
+            if (collide(arena, player)) {
+                arena.forEach(row => row.fill(0));
+                player.score = 0;
+                player.level = 1;
+                scoreElement.innerText = player.score;
+                levelElement.innerText = player.level;
+                dropInterval = 1000;
+            }
+        }
+
+        function playerRotate(dir) {
+            const posX = player.pos.x;
+            let offset = 1;
+            rotate(player.matrix, dir);
+            while (collide(arena, player)) {
+                player.pos.x += offset;
+                offset = -(offset + (offset > 0 ? 1 : -1));
+                if (offset > player.matrix[0].length) {
+                    rotate(player.matrix, -dir);
+                    player.pos.x = posX;
+                    return;
+                }
+            }
+        }
+
+        function rotate(matrix, dir) {
+            for (let y = 0; y < matrix.length; ++y) {
+                for (let x = 0; x < y; ++x) {
+                    [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
+                }
+            }
+            if (dir > 0) {
+                matrix.forEach(row => row.reverse());
+            } else {
+                matrix.reverse();
+            }
+        }
+
+        // Funções de Power-Ups
+        function useBomb() {
+            if (!gameRunning || player.score < 50) return;
+            player.score -= 50;
+            scoreElement.innerText = player.score;
+            // Remove as 3 linhas inferiores
+            arena.splice(arena.length - 3, 3);
+            for (let i = 0; i < 3; i++) {
+                arena.unshift(new Array(10).fill(0));
+            }
+        }
+
+        function useFreeze() {
+            if (!gameRunning || player.score < 40 || isFrozen) return;
+            player.score -= 40;
+            scoreElement.innerText = player.score;
+            isFrozen = true;
+            dropInterval = 3000; // Fica super lento por 10 segundos
+            
+            clearTimeout(freezeTimer);
+            freezeTimer = setTimeout(() => {
+                isFrozen = false;
+                dropInterval = Math.max(100, 1000 - (player.level - 1) * 120);
+            }, 10000);
+        }
+
+        function useClearHalf() {
+            if (!gameRunning || player.score < 100) return;
+            player.score -= 100;
+            scoreElement.innerText = player.score;
+            // Limpa a metade de baixo do tabuleiro
+            for (let y = 10; y < 20; y++) {
+                arena[y].fill(0);
+            }
+        }
+
+        let dropCounter = 0;
+        let dropInterval = 1000;
+        let lastTime = 0;
+        let gameRunning = false;
+
+        function update(time = 0) {
+            if (!gameRunning) return;
+
+            const deltaTime = time - lastTime;
+            lastTime = time;
+
+            dropCounter += deltaTime;
+            if (dropCounter > dropInterval) {
+                playerDrop();
+            }
+
+            draw();
+            requestAnimationFrame(update);
+        }
+
+        const arena = createMatrix(10, 20);
+
+        const player = {
+            pos: {x: 0, y: 0},
+            matrix: null,
+            nextMatrix: null,
+            score: 0,
+            level: 1,
+        };
+
+        document.addEventListener('keydown', event => {
+            if (!gameRunning) return;
+
+            if (event.key === 'ArrowLeft') {
+                playerMove(-1);
+            } else if (event.key === 'ArrowRight') {
+                playerMove(1);
+            } else if (event.key === 'ArrowDown') {
+                playerDrop();
+            } else if (event.key === 'q' || event.key === 'z') {
+                playerRotate(-1);
+            } else if (event.key === 'w' || event.key === 'x') {
+                playerRotate(1);
+            } else if (event.key === 'b' || event.key === 'B') {
+                useBomb();
+            } else if (event.key === 'n' || event.key === 'N') {
+                useFreeze();
+            } else if (event.key === 'm' || event.key === 'M') {
+                useClearHalf();
+            }
+        });
+
+        startBtn.addEventListener('click', () => {
+            arena.forEach(row => row.fill(0));
+            player.score = 0;
+            player.level = 1;
+            scoreElement.innerText = player.score;
+            levelElement.innerText = player.level;
+            dropInterval = 1000;
+            isFrozen = false;
+            
+            player.nextMatrix = null;
+            playerReset();
+            
+            gameRunning = true;
+            lastTime = performance.now();
+            update();
+            startBtn.blur();
+        });
+    </script>
+</body>
+</html>
